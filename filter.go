@@ -1,4 +1,4 @@
-package krakend_ipfilter
+package ipfilter
 
 import (
 	"fmt"

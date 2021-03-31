@@ -11,9 +11,8 @@ import (
 )
 
 // Register register a ip filter middleware at gin
-func Register(cfg config.ServiceConfig, logger logging.Logger, engine *gin.Engine) {
+func Register(cfg *config.ServiceConfig, logger logging.Logger, engine *gin.Engine) {
 	filterCfg := ipfilter.ParseConfig(cfg.ExtraConfig, logger)
-	fmt.Printf("%+v\n", filterCfg)
 	if filterCfg == nil {
 		return
 	}

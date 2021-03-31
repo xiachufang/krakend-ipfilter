@@ -1,4 +1,4 @@
-package krakend_ipfilter
+package ipfilter
 
 import (
 	"fmt"
@@ -43,5 +43,4 @@ func TestCIDRFilter(t *testing.T) {
 			t.Fatal("noop filter should never deny: ", ip)
 		}
 	}
-
 }

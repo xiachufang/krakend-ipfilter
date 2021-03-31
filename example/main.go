@@ -40,7 +40,7 @@ func main() {
 	engine := gin.Default()
 
 	// register krakend-ipfilter
-	ipfilter.Register(serviceConfig, logger, engine)
+	ipfilter.Register(&serviceConfig, logger, engine)
 
 	routerFactory := krakendgin.NewFactory(krakendgin.Config{
 		Engine:         engine,

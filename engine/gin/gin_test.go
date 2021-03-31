@@ -27,7 +27,7 @@ func TestRegister(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	eng := gin.New()
-	Register(cfg, logging.NoOp, eng)
+	Register(&cfg, logging.NoOp, eng)
 
 	eng.GET("/", func(ctx *gin.Context) {
 		_, err := ctx.Writer.WriteString("ip: " + ctx.ClientIP())
@@ -47,8 +47,8 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func testSpecifiedIP(t *testing.T, eng *gin.Engine, ip string, status int) {
-
+// nolint: bodyclose
+func testSpecifiedIP(t *testing.T, eng http.Handler, ip string, status int) {
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
 		t.Log(err)
@@ -57,7 +57,13 @@ func testSpecifiedIP(t *testing.T, eng *gin.Engine, ip string, status int) {
 
 	w := httptest.NewRecorder()
 	eng.ServeHTTP(w, req)
+	defer func() {
+		if err := w.Result().Body.Close(); err != nil {
+			println(err)
+		}
+	}()
 	body, err := ioutil.ReadAll(w.Result().Body)
+
 	if err != nil {
 		t.Log(err)
 	}
