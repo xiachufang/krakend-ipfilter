@@ -1,13 +1,23 @@
-# go-skeleton
+## krakend-ipfilter
 
-Go project template
-
-## Getting started
-
-click the <kbd>Use this template</kbd> button and wait a few minutes for init project.
+![Test](https://github.com/xiachufang/krakend-ipfilter/workflows/Test/badge.svg) ![Lint](https://github.com/xiachufang/krakend-ipfilter/workflows/Lint/badge.svg)
 
 ---
 
+
+## Test
+
+```
+make test
+```
+
+## Build
+
+```
+make build
+```
+
+---
 
 ref:
 
