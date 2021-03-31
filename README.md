@@ -4,6 +4,27 @@
 
 ---
 
+IP filter middleware for [KrakenD](https://github.com/devopsfaith/krakend) framework, base on [cidranger](https://github.com/yl2chen/cidranger)
+
+
+## Example
+
+Deny request from `192.168.0.0/16` but allow `192.168.1.1`:
+
+```json
+...
+    "extra_config": {
+        "github_com/xiachufang/krakend-ipfilter": {
+            "allow": [
+                "192.168.1.1"
+            ],
+            "deny": [
+                "192.168.0.0/16"
+            ]
+        }
+    }
+...
+```
 
 ## Test
 
@@ -11,14 +32,3 @@
 make test
 ```
 
-## Build
-
-```
-make build
-```
-
----
-
-ref:
-
-- [Standard Go Project Layout](https://github.com/golang-standards/project-layout)
