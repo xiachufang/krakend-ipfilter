@@ -4,7 +4,7 @@
 
 ---
 
-IP filter middleware for [KrakenD](https://github.com/devopsfaith/krakend) framework, base on [cidranger](https://github.com/yl2chen/cidranger)
+IP filter middleware for [KrakenD(lura)](github.com/luraproject/lura) framework, base on [cidranger](https://github.com/yl2chen/cidranger)
 
 
 ## Example
