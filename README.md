@@ -19,13 +19,13 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	krakendgin "github.com/luraproject/lura/router/gin"
-	"github.com/luraproject/lura/transport/http/client"
-	http "github.com/luraproject/lura/transport/http/server"
-	ipfilter "github.com/xiachufang/krakend-ipfilter/engine/gin"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	krakendgin "github.com/luraproject/lura/v2/router/gin"
+	"github.com/luraproject/lura/v2/transport/http/client"
+	http "github.com/luraproject/lura/v2/transport/http/server"
+	ipfilter "github.com/xiachufang/krakend-ipfilter/v2/engine/gin"
 )
 
 func main() {
@@ -66,6 +66,7 @@ func main() {
 
 	routerFactory.New().Run(serviceConfig)
 }
+
 ```
 
 ## Config file
