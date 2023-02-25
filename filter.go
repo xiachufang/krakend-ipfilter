@@ -83,5 +83,9 @@ func (f *CIDRFilter) Allow(ip string) bool {
 
 // Deny implement IPFilter.Deny
 func (f *CIDRFilter) Deny(ip string) bool {
+	// deny default
+	if ip == "" {
+		return true
+	}
 	return !f.Allow(ip)
 }

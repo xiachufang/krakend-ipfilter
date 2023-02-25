@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	ipfilter "github.com/xiachufang/krakend-ipfilter"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	ipfilter "github.com/xiachufang/krakend-ipfilter/v2"
 )
 
 func TestRegister(t *testing.T) {
@@ -43,7 +43,9 @@ func TestRegister(t *testing.T) {
 		"4ff1:4027:9788:741c:7c56:1970:227a:033e": http.StatusOK,
 	}
 	for ip, excepted := range testcases {
-		testSpecifiedIP(t, eng, ip, excepted)
+		t.Run(ip, func(t *testing.T) {
+			testSpecifiedIP(t, eng, ip, excepted)
+		})
 	}
 }
 
