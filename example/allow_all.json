@@ -29,20 +29,16 @@
     ],
     "extra_config": {
         "github_com/xiachufang/krakend-ipfilter": {
-            "allow": [
+            "deny": [
                 "192.168.1.1",
                 "8.8.8.8",
-                "127.0.0.1"
-            ],
-            "deny": [
-                "127.0.0.0/8",
-                "192.168.0.0/16",
-                "113.113.2.2/24"
+                "127.0.0.1/8"
             ],
             "ip_headers": [
                 "X-Forwarded-For",
                 "X-Real-Ip"
-            ]
+            ],
+            "mode": "allow_all"
         }
     }
 }

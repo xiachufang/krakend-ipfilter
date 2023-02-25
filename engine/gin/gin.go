@@ -30,7 +30,7 @@ func middleware(ipFilter ipfilter.IPFilter, cfg *ipfilter.Config, logger logging
 				break
 			}
 		}
-		if ipFilter.Deny(ip) {
+		if !ipFilter.Allow(ip) {
 			logger.Error(fmt.Sprintf("krakend-ipfilter deny request from: %s", ip))
 			ctx.AbortWithStatus(http.StatusForbidden)
 			return

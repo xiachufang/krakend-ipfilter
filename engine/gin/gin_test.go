@@ -12,7 +12,7 @@ import (
 	ipfilter "github.com/xiachufang/krakend-ipfilter/v2"
 )
 
-func TestRegister(t *testing.T) {
+func TestDefaultDeny(t *testing.T) {
 	cfg := config.ServiceConfig{ExtraConfig: map[string]interface{}{
 		ipfilter.Namespace: map[string]interface{}{
 			"deny": []string{
@@ -22,6 +22,7 @@ func TestRegister(t *testing.T) {
 			"allow": []string{
 				"192.168.1.1",
 			},
+			"mode": "deny_all",
 		},
 	}}
 
@@ -39,6 +40,44 @@ func TestRegister(t *testing.T) {
 		"127.0.0.1":    http.StatusForbidden,
 		"192.168.22.1": http.StatusForbidden,
 		"192.168.1.1":  http.StatusOK,
+		"123.11.12.3":  http.StatusForbidden,
+		"4ff1:4027:9788:741c:7c56:1970:227a:033e": http.StatusForbidden,
+	}
+	for ip, excepted := range testcases {
+		t.Run(ip, func(t *testing.T) {
+			testSpecifiedIP(t, eng, ip, excepted)
+		})
+	}
+}
+
+func TestDefaultAllow(t *testing.T) {
+	cfg := config.ServiceConfig{ExtraConfig: map[string]interface{}{
+		ipfilter.Namespace: map[string]interface{}{
+			"deny": []string{
+				"127.0.0.1",
+				"192.168.0.0/16",
+			},
+			"allow": []string{
+				"192.168.1.1",
+			},
+			"mode": "allow_all",
+		},
+	}}
+
+	gin.SetMode(gin.TestMode)
+	eng := gin.New()
+	Register(&cfg, logging.NoOp, eng)
+
+	eng.GET("/", func(ctx *gin.Context) {
+		_, err := ctx.Writer.WriteString("ip: " + ctx.ClientIP())
+		if err != nil {
+			t.Log("write response error: ", err)
+		}
+	})
+	testcases := map[string]int{
+		"127.0.0.1":    http.StatusForbidden,
+		"192.168.22.1": http.StatusForbidden,
+		"192.168.1.1":  http.StatusForbidden,
 		"123.11.12.3":  http.StatusOK,
 		"4ff1:4027:9788:741c:7c56:1970:227a:033e": http.StatusOK,
 	}

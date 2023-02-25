@@ -11,7 +11,6 @@ import (
 // IPFilter is a interface for allow or deny an ip
 type IPFilter interface {
 	Allow(ip string) bool
-	Deny(ip string) bool
 }
 
 // NoopFilter noop, allow always, never deny
@@ -22,15 +21,11 @@ func (noop *NoopFilter) Allow(_ string) bool {
 	return true
 }
 
-// Deny implement IPFilter.Deny
-func (noop *NoopFilter) Deny(_ string) bool {
-	return false
-}
-
 // CIDRFilter is an ip filter base on cidranger
 type CIDRFilter struct {
 	allowRanger cidranger.Ranger
 	denyRanger  cidranger.Ranger
+	cfg *Config
 }
 
 func newRanger(ips []string) cidranger.Ranger {
@@ -54,13 +49,13 @@ func newRanger(ips []string) cidranger.Ranger {
 
 // NewIPFilter create a cidranger base ip filter
 func NewIPFilter(cfg *Config) IPFilter {
-	// always allow and never deny
-	if cfg == nil || (len(cfg.Deny) == 0) {
+	if cfg == nil || (len(cfg.Deny) == 0 && len(cfg.Allow) == 0) {
 		return &NoopFilter{}
 	}
 	return &CIDRFilter{
 		allowRanger: newRanger(cfg.Allow),
 		denyRanger:  newRanger(cfg.Deny),
+		cfg: cfg,
 	}
 }
 
@@ -68,24 +63,16 @@ func NewIPFilter(cfg *Config) IPFilter {
 func (f *CIDRFilter) Allow(ip string) bool {
 	netIP := net.ParseIP(ip)
 	if netIP == nil {
-		return false
+		return f.cfg.Mode == ModeAllow
+	}
+	if f.cfg.Mode == ModeAllow {
+		if deny, err := f.denyRanger.Contains(netIP); deny || err != nil {
+			return false
+		}
+		return true
 	}
 	if allow, err := f.allowRanger.Contains(netIP); allow && err == nil {
 		return true
 	}
-
-	deny, err := f.denyRanger.Contains(netIP)
-	if deny || err != nil {
-		return false
-	}
-	return true
-}
-
-// Deny implement IPFilter.Deny
-func (f *CIDRFilter) Deny(ip string) bool {
-	// deny default
-	if ip == "" {
-		return true
-	}
-	return !f.Allow(ip)
+	return false
 }
