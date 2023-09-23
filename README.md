@@ -6,6 +6,13 @@
 
 IP filter middleware for [KrakenD(lura)](https://github.com/luraproject/lura) framework, base on [cidranger](https://github.com/yl2chen/cidranger)
 
+## Install
+
+```shell
+go get github.com/xiachufang/krakend-ipfilter/v2
+```
+
+
 ## Usage
 
 [Example](https://github.com/xiachufang/krakend-ipfilter/tree/master/example)
@@ -69,32 +76,10 @@ func main() {
 
 ```
 
-## Config file
-
-```json
-...
-    "extra_config": {
-        "github_com/xiachufang/krakend-ipfilter": {
-            "allow": [ // Requests from these ip addresses will be allowed.
-                "192.168.1.1"
-            ],
-            "deny": [ // Requests from these ip addresses will be rejected.
-                "192.168.0.0/16"
-            ],
-            "ip_headers": [ // Parse IP address from these HTTP headers sequentially.
-              "X-Forwarded-For",
-              "X-Real-Ip"
-            ],
-            "mode": "deny_all" // deny_all or allow_all, deny or allow those ip not defined in allow/deny list
-        }
-    }
-...
-```
-
-
 ## Config Example
 
-### Allow specified IP and deny other IP
+### Only allow specified IP
+> Complete example configuration file: [allow.json](https://github.com/xiachufang/krakend-ipfilter/blob/master/example/allow.json)
 
 ```json
     "extra_config": {
@@ -103,18 +88,14 @@ func main() {
                 "192.168.1.1",
                 "8.8.8.8",
                 "127.0.0.1/8"
-            ],
-            "ip_headers": [
-                "X-Forwarded-For",
-                "X-Real-Ip"
-            ],
-            "mode": "deny_all"
+            ]
         }
     }
 ```
 
 
-### Deny specified IP and allow other IP
+### Only deny specified IP
+> Complete example configuration file: [deny.json](https://github.com/xiachufang/krakend-ipfilter/blob/master/example/deny.json)
 
 ```json
     "extra_config": {
@@ -123,12 +104,23 @@ func main() {
                 "192.168.1.1",
                 "8.8.8.8",
                 "127.0.0.1/8"
+            ]
+        }
+    }
+```
+
+### Allow IP within a range but deny a specific one
+> Complete example configuration file: [deny_allow.json](https://github.com/xiachufang/krakend-ipfilter/blob/master/example/deny_allow.json)
+
+```json
+    "extra_config": {
+        "github_com/xiachufang/krakend-ipfilter": {
+            "allow": [
+                "127.0.0.0/24"
             ],
-            "ip_headers": [
-                "X-Forwarded-For",
-                "X-Real-Ip"
-            ],
-            "mode": "allow_all"
+            "deny": [
+                "127.0.0.1"
+            ]
         }
     }
 ```
