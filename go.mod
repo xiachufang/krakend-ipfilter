@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/luraproject/lura/v2 v2.2.4
-	github.com/xiachufang/krakend-ipfilter v1.0.1
 	github.com/yl2chen/cidranger v1.0.2
 )
 
