@@ -1,0 +1,39 @@
+{
+    "version": 3,
+    "name": "GitHub Gateway",
+    "port": 8989,
+    "cache_ttl": "3600s",
+    "timeout": "3s",
+    "endpoints": [
+        {
+            "endpoint": "api/get-user/{userId}",
+            "method": "GET",
+            "output_encoding": "json",
+            "concurrent_calls": 1,
+            "headers_to_pass": [
+                "*"
+            ],
+            "querystring_params": [
+                "*"
+            ],
+            "backend": [
+                {
+                    "method": "GET",
+                    "host": [
+                        "https://api.github.com"
+                    ],
+                    "url_pattern": "/users/{userId}"
+                }
+            ]
+        }
+    ],
+    "extra_config": {
+        "github_com/xiachufang/krakend-ipfilter": {
+            "deny": [
+                "192.168.1.1",
+                "8.8.8.8",
+                "127.0.0.1/8"
+            ]
+        }
+    }
+}

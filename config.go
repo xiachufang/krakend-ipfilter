@@ -14,19 +14,12 @@ type Config struct {
 	Allow []string `json:"allow"`
 	// header keys to parse real ip, default to []string{X-Forwarded-For, X-Real-Ip}
 	IPHeaders []string `json:"ip_headers"`
-	// if mode is "deny_all", all ip which not in allow list will deny.
-	// if default mod is "allow_all", all ip which not in deny list will allow.
-	// default is "deny_all"
-	Mode string `json:"mode"`
 }
 
 var (
 	Namespace = "github_com/xiachufang/krakend-ipfilter"
+	// default parse real ip from `X-Forwarded-For` or `X-Real-Ip`
 	defaultIPHeaders = []string{"X-Forwarded-For", "X-Real-Ip"}
-	// ModeDeny deny all ip which not in allow ip list
-	ModeDeny = "deny_all"
-	// ModeAllow allow all ip which not in deny ip list
-	ModeAllow = "allow_all"
 )
 
 // ParseConfig build ip filter's Config
@@ -38,19 +31,16 @@ func ParseConfig(e config.ExtraConfig, logger logging.Logger) *Config {
 
 	data, err := json.Marshal(v)
 	if err != nil {
-		logger.Error(fmt.Sprintf("marshal krakend-ipfilter config error: %s", err.Error()))
+		logger.Error(fmt.Sprintf("marshal krakend-ipfilter config error: %v", err))
 		return nil
 	}
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		logger.Error(fmt.Sprintf("unmarshal krakend-ipfilter config error: %s", err.Error()))
+		logger.Error(fmt.Sprintf("unmarshal krakend-ipfilter config error: %v", err))
 		return nil
 	}
 	if len(cfg.IPHeaders) == 0 {
 		cfg.IPHeaders = defaultIPHeaders
-	}
-	if cfg.Mode == "" {
-		cfg.Mode = ModeDeny
 	}
 	return &cfg
 }

@@ -25,22 +25,36 @@ func (noop *NoopFilter) Allow(_ string) bool {
 type CIDRFilter struct {
 	allowRanger cidranger.Ranger
 	denyRanger  cidranger.Ranger
-	cfg *Config
+}
+
+var emptyRanger cidranger.Ranger
+
+func isIPV6(ip string) bool {
+	return strings.IndexByte(ip, byte(':')) >= 0
+}
+
+func isCIDRIP(ip string) bool {
+	return strings.IndexByte(ip, byte('/')) >= 0
 }
 
 func newRanger(ips []string) cidranger.Ranger {
+	if len(ips) == 0 {
+		return emptyRanger
+	}
 	ranger := cidranger.NewPCTrieRanger()
 	for _, ip := range ips {
-		isCIDR := strings.IndexByte(ip, byte('/'))
-		if isCIDR < 0 {
-			ip = fmt.Sprintf("%s/24", ip)
+		if !isCIDRIP(ip) {
+			if isIPV6(ip) {
+				ip = fmt.Sprintf("%s/128", ip)
+			} else {
+				ip = fmt.Sprintf("%s/32", ip)
+			}
 		}
 		_, ipNet, err := net.ParseCIDR(ip)
 		if err != nil || ipNet == nil {
 			continue
 		}
-		err = ranger.Insert(cidranger.NewBasicRangerEntry(*ipNet))
-		if err != nil {
+		if err := ranger.Insert(cidranger.NewBasicRangerEntry(*ipNet)); err != nil {
 			continue
 		}
 	}
@@ -55,24 +69,32 @@ func NewIPFilter(cfg *Config) IPFilter {
 	return &CIDRFilter{
 		allowRanger: newRanger(cfg.Allow),
 		denyRanger:  newRanger(cfg.Deny),
-		cfg: cfg,
 	}
 }
 
 // Allow implement IPFilter.Allow
+// 1. If the "allow" list is configured, only the IPs in the "allow" list are allowed access. All other IPs are denied access.
+// 2. If the "deny" list is configured, the IPs in the "deny" list are denied access.
+// 3. If both the "allow" and "deny" lists are configured, both rules are applied simultaneously.
 func (f *CIDRFilter) Allow(ip string) bool {
-	netIP := net.ParseIP(ip)
-	if netIP == nil {
-		return f.cfg.Mode == ModeAllow
+	realIP := net.ParseIP(ip)
+	if realIP == nil {
+		return false
 	}
-	if f.cfg.Mode == ModeAllow {
-		if deny, err := f.denyRanger.Contains(netIP); deny || err != nil {
+
+	if f.denyRanger != emptyRanger {
+		deny, err := f.denyRanger.Contains(realIP)
+		if err != nil || deny {
 			return false
 		}
-		return true
 	}
-	if allow, err := f.allowRanger.Contains(netIP); allow && err == nil {
-		return true
+
+	if f.allowRanger != emptyRanger {
+		allow, err := f.allowRanger.Contains(realIP)
+		if err != nil || !allow {
+			return false
+		}
 	}
-	return false
+
+	return true
 }
