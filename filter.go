@@ -11,7 +11,6 @@ import (
 // IPFilter is a interface for allow or deny an ip
 type IPFilter interface {
 	Allow(ip string) bool
-	Deny(ip string) bool
 }
 
 // NoopFilter noop, allow always, never deny
@@ -22,30 +21,40 @@ func (noop *NoopFilter) Allow(_ string) bool {
 	return true
 }
 
-// Deny implement IPFilter.Deny
-func (noop *NoopFilter) Deny(_ string) bool {
-	return false
-}
-
 // CIDRFilter is an ip filter base on cidranger
 type CIDRFilter struct {
 	allowRanger cidranger.Ranger
 	denyRanger  cidranger.Ranger
 }
 
+var emptyRanger cidranger.Ranger
+
+func isIPV6(ip string) bool {
+	return strings.IndexByte(ip, byte(':')) >= 0
+}
+
+func isCIDRIP(ip string) bool {
+	return strings.IndexByte(ip, byte('/')) >= 0
+}
+
 func newRanger(ips []string) cidranger.Ranger {
+	if len(ips) == 0 {
+		return emptyRanger
+	}
 	ranger := cidranger.NewPCTrieRanger()
 	for _, ip := range ips {
-		isCIDR := strings.IndexByte(ip, byte('/'))
-		if isCIDR < 0 {
-			ip = fmt.Sprintf("%s/24", ip)
+		if !isCIDRIP(ip) {
+			if isIPV6(ip) {
+				ip = fmt.Sprintf("%s/128", ip)
+			} else {
+				ip = fmt.Sprintf("%s/32", ip)
+			}
 		}
 		_, ipNet, err := net.ParseCIDR(ip)
 		if err != nil || ipNet == nil {
 			continue
 		}
-		err = ranger.Insert(cidranger.NewBasicRangerEntry(*ipNet))
-		if err != nil {
+		if err := ranger.Insert(cidranger.NewBasicRangerEntry(*ipNet)); err != nil {
 			continue
 		}
 	}
@@ -54,8 +63,7 @@ func newRanger(ips []string) cidranger.Ranger {
 
 // NewIPFilter create a cidranger base ip filter
 func NewIPFilter(cfg *Config) IPFilter {
-	// always allow and never deny
-	if cfg == nil || (len(cfg.Deny) == 0) {
+	if cfg == nil || (len(cfg.Deny) == 0 && len(cfg.Allow) == 0) {
 		return &NoopFilter{}
 	}
 	return &CIDRFilter{
@@ -65,23 +73,28 @@ func NewIPFilter(cfg *Config) IPFilter {
 }
 
 // Allow implement IPFilter.Allow
+// 1. If the "allow" list is configured, only the IPs in the "allow" list are allowed access. All other IPs are denied access.
+// 2. If the "deny" list is configured, the IPs in the "deny" list are denied access.
+// 3. If both the "allow" and "deny" lists are configured, both rules are applied simultaneously.
 func (f *CIDRFilter) Allow(ip string) bool {
-	netIP := net.ParseIP(ip)
-	if netIP == nil {
+	realIP := net.ParseIP(ip)
+	if realIP == nil {
 		return false
-	}
-	if allow, err := f.allowRanger.Contains(netIP); allow && err == nil {
-		return true
 	}
 
-	deny, err := f.denyRanger.Contains(netIP)
-	if deny || err != nil {
-		return false
+	if f.denyRanger != emptyRanger {
+		deny, err := f.denyRanger.Contains(realIP)
+		if err != nil || deny {
+			return false
+		}
 	}
+
+	if f.allowRanger != emptyRanger {
+		allow, err := f.allowRanger.Contains(realIP)
+		if err != nil || !allow {
+			return false
+		}
+	}
+
 	return true
-}
-
-// Deny implement IPFilter.Deny
-func (f *CIDRFilter) Deny(ip string) bool {
-	return !f.Allow(ip)
 }
